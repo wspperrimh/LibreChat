@@ -4,14 +4,7 @@ import throttle from 'lodash/throttle';
 import { useRecoilValue } from 'recoil';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { List, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
-import {
-  Button,
-  EmptyState,
-  Spinner,
-  useMediaQuery,
-  useRemScale,
-  buttonVariants,
-} from '@librechat/client';
+import { Button, EmptyState, Spinner, useRemScale, buttonVariants } from '@librechat/client';
 import {
   Archive,
   ChevronDown,
@@ -49,6 +42,7 @@ import {
 import { useLocalize, TranslationKeys, useElementSize, useOuterScrollWindow } from '~/hooks';
 import { useActiveJobs, useRunningConversationsQuery } from '~/data-provider';
 import { facetFilterCountAtom, resetFacetsAtom } from './facets';
+import useDrawerViewport from '~/hooks/Nav/useDrawerViewport';
 import { groupConversations, cn } from '~/utils';
 import Convo from './Convo';
 import store from '~/store';
@@ -265,7 +259,7 @@ const Conversations: FC<ConversationsProps> = ({
     resetFilters();
     resetFacets();
   }, [resetFilters, resetFacets]);
-  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isSmallScreen = useDrawerViewport();
   /* Dropping a chat on the Chats section makes it an ordinary chat: out of its
    * project, and unpinned. A root-list chat that is not pinned already is one,
    * so it is rejected rather than given a drop that would do nothing. */
