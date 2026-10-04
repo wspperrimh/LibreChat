@@ -100,10 +100,9 @@ function createAzureSoraTools(fields = {}) {
     'AZURE_SORA_MODEL',
     'AZURE_OPENAI_SORA_DEPLOYMENT',
   ]);
-  const apiVersion = resolveConfigValue(fields, [
-    'AZURE_SORA_API_VERSION',
-    'AZURE_OPENAI_API_VERSION',
-  ]);
+  /* The video generations API only accepts `preview`; a generic Azure api-version
+   * for other endpoints would break it, so there is no AZURE_OPENAI_API_VERSION fallback. */
+  const apiVersion = resolveConfigValue(fields, ['AZURE_SORA_API_VERSION']);
   const pollIntervalMs = resolvePositiveInt(
     fields.AZURE_SORA_POLL_INTERVAL_MS ?? process.env.AZURE_SORA_POLL_INTERVAL_MS,
     SORA_JOB_POLL_INTERVAL_MS,
@@ -135,11 +134,6 @@ function createAzureSoraTools(fields = {}) {
       return returnValue(dimensions.error);
     }
 
-    /** @type {AbortSignal} */
-    const derivedSignal = runnableConfig?.signal
-      ? AbortSignal.any([runnableConfig.signal])
-      : undefined;
-
     const client = createSoraVideoClient({
       apiKey,
       endpoint,
@@ -149,7 +143,7 @@ function createAzureSoraTools(fields = {}) {
 
     const result = await generateSoraVideo({
       client,
-      signal: derivedSignal,
+      signal: runnableConfig?.signal,
       pollIntervalMs,
       timeoutMs,
       request: {
