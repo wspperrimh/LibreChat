@@ -48,7 +48,16 @@ export namespace Agents {
 
   export type MessageContentVideoUrl = {
     type: ContentTypes.VIDEO_URL;
-    video_url: { url: string };
+    video_url: {
+      url: string;
+      /** Pre-saved file metadata for generated videos; set by the producing tool
+       * so the tool-end callback can wrap it into an attachment without re-saving. */
+      file_id?: string;
+      filename?: string;
+      mime_type?: string;
+      source?: string;
+      bytes?: number;
+    };
   };
 
   export type MessageContentInputAudio = {

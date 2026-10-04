@@ -17,6 +17,7 @@ export const TOOL_FRIENDLY_NAME_KEYS: Record<string, TranslationKeys> = {
   [Constants.CHECK_BACKGROUND_TASK]: 'com_ui_background_tasks',
   web_search: 'com_ui_tool_name_web_search',
   image_gen_oai: 'com_ui_tool_name_image_gen',
+  video_gen_azure: 'com_ui_tool_name_video_gen',
   image_edit_oai: 'com_ui_tool_name_image_edit',
   gemini_image_gen: 'com_ui_tool_name_image_gen',
   file_search: 'com_ui_tool_name_file_search',

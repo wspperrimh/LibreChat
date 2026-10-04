@@ -134,6 +134,30 @@
     ]
   },
   {
+    "name": "Azure Sora Video",
+    "pluginKey": "video_gen_azure",
+    "description": "Generate short video clips from text prompts using a Sora deployment on Azure OpenAI.",
+    "icon": "assets/video_gen_azure.svg",
+    "isAuthRequired": "true",
+    "authConfig": [
+      {
+        "authField": "AZURE_SORA_API_KEY||AZURE_OPENAI_API_KEY",
+        "label": "Azure OpenAI API Key",
+        "description": "Your Azure OpenAI resource API key for the Sora video deployment."
+      },
+      {
+        "authField": "AZURE_SORA_ENDPOINT||AZURE_OPENAI_ENDPOINT",
+        "label": "Azure OpenAI Endpoint",
+        "description": "Your Azure OpenAI resource endpoint, e.g. https://<resource>.openai.azure.com"
+      },
+      {
+        "authField": "AZURE_SORA_DEPLOYMENT",
+        "label": "Sora Deployment Name",
+        "description": "The deployment name of your Sora video model on Azure OpenAI."
+      }
+    ]
+  },
+  {
     "name": "OpenWeather",
     "pluginKey": "open_weather",
     "description": "Get weather forecasts and historical data from the OpenWeather API",

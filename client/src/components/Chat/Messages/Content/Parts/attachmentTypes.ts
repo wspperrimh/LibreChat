@@ -1,4 +1,4 @@
-import { imageExtRegex } from 'librechat-data-provider';
+import { imageExtRegex, videoMimeTypes } from 'librechat-data-provider';
 import type { TAttachment, TAttachmentMetadata, TFile } from 'librechat-data-provider';
 import type { ToolArtifactType } from '~/utils/artifacts';
 import { detectArtifactTypeFromFile } from '~/utils/artifacts';
@@ -153,6 +153,20 @@ export const isImageAttachment = (attachment: TAttachment): boolean => {
   return (
     imageExtRegex.test(attachment.filename) && width != null && height != null && filepath != null
   );
+};
+
+/**
+ * An attachment is treated as a video when its stored MIME type is a
+ * servable video format and a filepath exists to stream from. Generated
+ * clips carry `video/mp4`; user uploads in other containers keep working
+ * as long as the declared type is one browsers can play.
+ */
+export const isVideoAttachment = (attachment: TAttachment): boolean => {
+  const { type, filepath } = attachment as TFile & TAttachmentMetadata;
+  if (filepath == null || typeof type !== 'string') {
+    return false;
+  }
+  return videoMimeTypes.test(type);
 };
 
 /**

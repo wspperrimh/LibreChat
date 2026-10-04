@@ -56,6 +56,7 @@ const {
   StructuredWolfram,
   TavilySearchResults,
   createGeminiImageTool,
+  createAzureSoraTools,
   createOpenAIImageTools,
 } = require('../');
 const {
@@ -265,6 +266,16 @@ const loadTools = async ({
         req: options.req,
         imageFiles,
         userId: user,
+        fileStrategy,
+      });
+    },
+    video_gen_azure: async () => {
+      const authFields = getAuthFields('video_gen_azure');
+      const authValues = await loadAuthValues({ userId: user, authFields });
+      return createAzureSoraTools({
+        ...authValues,
+        isAgent: !!agent,
+        req: options.req,
         fileStrategy,
       });
     },

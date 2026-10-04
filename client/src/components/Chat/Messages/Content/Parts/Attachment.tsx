@@ -1,6 +1,6 @@
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@librechat/client';
-import { Tools } from 'librechat-data-provider';
+import { Tools, apiBaseUrl } from 'librechat-data-provider';
 import { Loader2, AlertCircle, Download, ChevronDown, Files as FilesIcon } from 'lucide-react';
 import type { TAttachment, TFile, TAttachmentMetadata } from 'librechat-data-provider';
 import type { ToolArtifactType } from '~/utils/artifacts';
@@ -12,6 +12,7 @@ import {
   isImageAttachment,
   isInternalSandboxArtifact,
   isTextAttachment,
+  isVideoAttachment,
   renderAttachmentKey,
 } from './attachmentTypes';
 import { useLocalize, useAttachmentPreviewSync, useExpandCollapse } from '~/hooks';
@@ -21,8 +22,8 @@ import Image from '~/components/Chat/Messages/Content/Image';
 import { ROW_GLYPH_SLOT, TOOL_ROW_CLASSES } from '../rows';
 import ToolMermaidArtifact from './ToolMermaidArtifact';
 import ToolArtifactCard from './ToolArtifactCard';
+import { cn, toAbsoluteFilePath } from '~/utils';
 import { useAttachmentLink } from './LogLink';
-import { cn } from '~/utils';
 
 const COLLAPSED_MAX_HEIGHT = 320;
 
@@ -435,6 +436,50 @@ const ImageAttachment = memo(({ attachment }: { attachment: TAttachment }) => {
   );
 });
 
+const VideoAttachment = memo(({ attachment }: { attachment: TAttachment }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { filepath = null } = attachment as TFile & TAttachmentMetadata;
+
+  useEffect(() => {
+    setIsLoaded(false);
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, [attachment]);
+
+  /* Root-relative server paths (`/images/...` static, `/api/...` downloads) are
+   * resolved against the API base, mirroring `Image`; absolute storage URLs
+   * (S3, CloudFront, Firebase, Azure blob) pass through unchanged. */
+  const videoSrc = useMemo(
+    () => (filepath ? toAbsoluteFilePath(filepath, apiBaseUrl()) : ''),
+    [filepath],
+  );
+
+  if (!videoSrc) {
+    return null;
+  }
+
+  return (
+    <div
+      className={cn(
+        'origin-top transition-all duration-500 ease-out',
+        isLoaded ? 'scale-100 opacity-100' : 'scale-[0.98] opacity-0',
+      )}
+    >
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption -- generated clips have no caption track */}
+      <video
+        controls
+        playsInline
+        preload="metadata"
+        src={videoSrc}
+        title={attachment.filename || 'attachment video'}
+        aria-label={attachment.filename || 'attachment video'}
+        className="mb-4 max-h-[45vh] max-w-lg rounded-lg bg-black"
+      />
+    </div>
+  );
+});
+VideoAttachment.displayName = 'VideoAttachment';
+
 interface PanelArtifactProps {
   attachment: TAttachment;
   /** Pre-classified type from the routing decision tree, threaded down so
@@ -486,6 +531,9 @@ export default function Attachment({ attachment }: { attachment?: TAttachment })
   if (isImageAttachment(attachment)) {
     return <ImageAttachment attachment={attachment} />;
   }
+  if (isVideoAttachment(attachment)) {
+    return <VideoAttachment attachment={attachment} />;
+  }
   // Single classification call. The result is threaded into
   // `PanelArtifact` -> `fileToArtifact` so the panel path doesn't
   // re-run `detectArtifactTypeFromFile` a second time.
@@ -512,6 +560,7 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
 
   const fileAttachments: TAttachment[] = [];
   const imageAttachments: TAttachment[] = [];
+  const videoAttachments: TAttachment[] = [];
   const textAttachments: TAttachment[] = [];
   /* Pending-preview chips share this row with their future selves —
    * `type` is null while pending so the renderer falls back to
@@ -529,6 +578,10 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
     }
     if (isImageAttachment(attachment)) {
       imageAttachments.push(attachment);
+      return;
+    }
+    if (isVideoAttachment(attachment)) {
+      videoAttachments.push(attachment);
       return;
     }
     if ((attachment as Partial<TFile>).status === 'pending') {
@@ -563,6 +616,7 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
   const orderedPanel = [...panelRow].sort(byEntrySalience);
   mermaidArtifacts.sort(bySalience);
   imageAttachments.sort(bySalience);
+  videoAttachments.sort(bySalience);
 
   const downloadableFileAttachments = fileAttachments.filter((attachment) =>
     Boolean(attachment.filepath),
@@ -623,6 +677,16 @@ export function AttachmentGroup({ attachments }: { attachments?: TAttachment[] }
             <TextAttachment
               attachment={attachment}
               key={renderAttachmentKey('text', attachment, index)}
+            />
+          ))}
+        </div>
+      )}
+      {videoAttachments.length > 0 && (
+        <div className="mb-2 flex flex-wrap items-center">
+          {videoAttachments.map((attachment, index) => (
+            <VideoAttachment
+              attachment={attachment}
+              key={renderAttachmentKey('video', attachment, index)}
             />
           ))}
         </div>

@@ -15,6 +15,7 @@ import {
   Zap,
   Wrench,
   ListChecks,
+  Clapperboard,
 } from 'lucide-react';
 import LangIcon from '~/components/Messages/Content/LangIcon';
 import CustomIcon from '~/components/ui/CustomIcon';
@@ -29,6 +30,7 @@ export type ToolIconType =
   | 'execute_code'
   | 'web_search'
   | 'image_gen'
+  | 'video_gen'
   | 'subagent'
   | 'agent_handoff'
   | 'file_search'
@@ -48,6 +50,7 @@ const ICON_MAP: Record<ToolIconType, React.ComponentType<{ className?: string }>
   execute_code: Terminal,
   web_search: Globe,
   image_gen: ImageIcon,
+  video_gen: Clapperboard,
   agent_handoff: ArrowRightLeft,
   subagent: Users,
   file_search: FileSearch,
@@ -81,6 +84,9 @@ export function getToolIconType(name: string): ToolIconType {
   }
   if (name === 'image_gen_oai' || name === 'image_edit_oai' || name === 'gemini_image_gen') {
     return 'image_gen';
+  }
+  if (name === 'video_gen_azure') {
+    return 'video_gen';
   }
   if (name === 'file_search' || name === 'retrieval') {
     return 'file_search';

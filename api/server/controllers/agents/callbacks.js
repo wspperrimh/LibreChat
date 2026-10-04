@@ -1084,7 +1084,40 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null, jo
         if (!part) {
           continue;
         }
-        if (part.type !== 'image_url') {
+        if (part.type !== 'image_url' && part.type !== 'video_url') {
+          continue;
+        }
+        if (part.type === 'video_url') {
+          /* Video tools persist the file themselves and hand its metadata
+           * through the artifact part, so the callback only wraps it into an
+           * attachment — no re-save like `saveBase64Image` performs. */
+          const video = part.video_url;
+          artifactPromises.push(
+            (async () => {
+              const attachment = {
+                file_id: video.file_id ?? output.artifact.file_ids?.[i],
+                filename: video.filename,
+                filepath: video.url,
+                type: video.mime_type,
+                bytes: video.bytes,
+                source: video.source,
+                context: FileContext.video_generation,
+                user: req.user.id,
+                ...getAttachmentOwnership(metadata),
+                messageId: metadata.run_id,
+                toolCallId: output.tool_call_id,
+                conversationId: metadata.thread_id,
+              };
+              if (!streamId && !res.headersSent) {
+                return attachment;
+              }
+              writeAttachment(res, streamId, attachment, jobCreatedAt);
+              return attachment;
+            })().catch((error) => {
+              logger.error('Error processing artifact content:', error);
+              return null;
+            }),
+          );
           continue;
         }
         const { url } = part.image_url;
@@ -1450,7 +1483,46 @@ function createResponsesToolEndCallback({ req, res, tracker, artifactPromises })
         if (!part) {
           continue;
         }
-        if (part.type !== 'image_url') {
+        if (part.type !== 'image_url' && part.type !== 'video_url') {
+          continue;
+        }
+        if (part.type === 'video_url') {
+          /* Video tools persist the file themselves and hand its metadata
+           * through the artifact part, so the callback only wraps it into an
+           * attachment — no re-save like `saveBase64Image` performs. */
+          const video = part.video_url;
+          artifactPromises.push(
+            (async () => {
+              const fileMetadata = {
+                file_id: video.file_id ?? output.artifact.file_ids?.[i],
+                filename: video.filename,
+                filepath: video.url,
+                type: video.mime_type,
+                bytes: video.bytes,
+                source: video.source,
+                context: FileContext.video_generation,
+                user: req.user.id,
+                toolCallId: output.tool_call_id,
+              };
+
+              // For Responses API, emit attachment during streaming
+              if (res.headersSent && !res.writableEnded) {
+                const attachment = {
+                  file_id: fileMetadata.file_id,
+                  filename: fileMetadata.filename,
+                  type: fileMetadata.type,
+                  url: fileMetadata.filepath,
+                  tool_call_id: output.tool_call_id,
+                };
+                writeResponsesAttachment(res, tracker, attachment, metadata);
+              }
+
+              return fileMetadata;
+            })().catch((error) => {
+              logger.error('Error processing artifact content:', error);
+              return null;
+            }),
+          );
           continue;
         }
         const { url } = part.image_url;
