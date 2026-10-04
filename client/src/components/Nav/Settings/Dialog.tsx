@@ -2,6 +2,7 @@ import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { X, ChevronLeft } from 'lucide-react';
 import { SettingsTabValues } from 'librechat-data-provider';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import {
   Button,
   DialogLayer,
@@ -9,7 +10,6 @@ import {
   useRemScale,
   DIALOG_SCRIM_CLASS,
 } from '@librechat/client';
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import type { TDialogProps } from '~/common';
 import type { SettingsTab } from './types';
 import { useSettingsContext } from './context';
